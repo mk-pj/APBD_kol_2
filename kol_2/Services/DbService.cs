@@ -65,6 +65,19 @@ public class DbService(SeedingDbContext context) : IDbService
                 throw new NotFoundException($"Nursery {newBatchDto.Nursery} doesn't exist");
     
             var employees = await _context.Employees.ToListAsync();
+
+            var newBatch = new SeedlingBatch()
+            {
+                NurseryId = nursery.NurseryId,
+                SpeciesId = species.SpeciesId,
+                Quantity = newBatchDto.Quantity,
+                SownDate = DateTime.Now,
+                ReadyDate = null
+            };
+
+            await _context.SeedlingBatches.AddAsync(newBatch);
+   
+            await _context.SaveChangesAsync();
             
             foreach (var responsible in newBatchDto.Responsible)
             {
@@ -72,17 +85,15 @@ public class DbService(SeedingDbContext context) : IDbService
                 
                 if(employee is null)
                     throw new NotFoundException($"Employee {responsible.EmployeeId} not found");
+
+                await _context.AddAsync(new Responsible()
+                {
+                    BatchId = newBatch.BatchId,
+                    EmployeeId = responsible.EmployeeId,
+                    Role = responsible.Role
+                });
             }
 
-            await _context.SeedlingBatches.AddAsync(new SeedlingBatch()
-            {
-                NurseryId = nursery.NurseryId,
-                SpeciesId = species.SpeciesId,
-                Quantity = newBatchDto.Quantity,
-                SownDate = DateTime.Now,
-                ReadyDate = null
-            });
-            
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
         }
