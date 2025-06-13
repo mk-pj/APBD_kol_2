@@ -1,9 +1,17 @@
+using kol_2.Data;
+using kol_2.Middlewares;
+using kol_2.Services;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
+builder.Services.AddDbContext<SeedingDbContext>(opt 
+    => opt.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+builder.Services.AddScoped<IDbService, DbService>();
 
 var app = builder.Build();
 
@@ -12,6 +20,8 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+app.UseGlobalExceptionHandler();
 
 app.UseHttpsRedirection();
 
